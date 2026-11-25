@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rank it</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F6;--sf:#fff;--ink:#14182B;--mut:#6A7088;--ac:#2F4BFF;--ln:#D8DDE8;--acink:#fff;--rk:#C5CBE0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141C;--sf:#1B1E2A;--ink:#ECEEF6;--mut:#9096AD;--ac:#7C8CFF;--ln:#2C3040;--acink:#10131F;--rk:#3A4058}}
+:root[data-theme="dark"]{--bg:#12141C;--sf:#1B1E2A;--ink:#ECEEF6;--mut:#9096AD;--ac:#7C8CFF;--ln:#2C3040;--acink:#10131F;--rk:#3A4058}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.4 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1040px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.03em;margin:0 0 18px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.add{display:flex;gap:8px;flex-wrap:wrap;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:10px}
+.add textarea{flex:1 1 260px;border:0;background:transparent;resize:none;padding:8px 6px;min-height:40px;outline:none}
+.add select{border:1px solid var(--ln);background:var(--bg);border-radius:8px;padding:0 8px;min-height:40px;max-width:100%}
+.pri{background:var(--ac);color:var(--acink);border:0;border-radius:8px;padding:0 18px;min-height:40px;font-weight:600}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}
+.seg{display:inline-flex;border:1px solid var(--ln);border-radius:10px;overflow:hidden;background:var(--sf)}
+.seg button{border:0;background:none;padding:8px 14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.ghost{border:1px solid var(--ln);background:var(--sf);border-radius:10px;padding:8px 14px}
+.sp{flex:1}
+#out{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;align-items:start}
+#out.one{grid-template-columns:minmax(0,1fr);max-width:720px}
+.lst{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:14px 12px 10px}
+.lst.over{outline:2px dashed var(--ac)}
+.lst header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.ln{flex:1;min-width:0;border:0;background:transparent;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;padding:4px 2px;border-radius:6px}
+.cnt{color:var(--mut);font-size:.85rem}
+.lst header button{border:0;background:none;color:var(--mut);font-size:.85rem;text-decoration:underline}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:flex;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid var(--ln);background:var(--sf);cursor:grab}
+.rows li:first-child{border-top:0}
+.rows li.dragging{opacity:.35}
+.rows li.before{box-shadow:0 -2px 0 var(--ac)}
+.rows li.after{box-shadow:0 2px 0 var(--ac)}
+#out.one .rows{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:6px 10px}
+.rk{font-weight:800;font-size:1.9rem;letter-spacing:-.04em;line-height:1;min-width:2ch;text-align:right;color:var(--rk);font-variant-numeric:tabular-nums}
+li:first-child .rk{color:var(--ac)}
+.tx{flex:1;min-width:0;overflow-wrap:anywhere;padding:2px 0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--mut);border:1px solid var(--ln);border-radius:99px;padding:2px 9px;white-space:nowrap}
+.chip i{width:8px;height:8px;border-radius:50%}
+.rows select{border:1px solid var(--ln);background:var(--bg);border-radius:6px;font-size:.8rem;padding:2px;max-width:92px}
+.ct{display:flex;gap:2px}
+.ct button{width:30px;height:30px;border:0;background:none;border-radius:6px;color:var(--mut)}
+.ct button:hover:not(:disabled){background:var(--bg);color:var(--ink)}
+.ct button:disabled{opacity:.25;cursor:default}
+.empty{color:var(--mut);margin:8px 6px 6px;font-size:.92rem}
+#exp{display:none;width:100%;min-height:160px;margin-top:14px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);padding:10px}
+#exp.on{display:block}
+.dp{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:14px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:10px;max-width:720px}
+.dp h3{margin:6px 0 0;font-size:1.05rem;font-weight:800;letter-spacing:-.02em}
+.dp p{margin:0;color:var(--mut);font-size:.9rem}
+.dp input{border:1px solid var(--ln);background:var(--bg);border-radius:8px;padding:8px 10px;width:100%;min-height:40px}
+.dp .rw{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dp .rw input{flex:1 1 200px;width:auto}
+#dataBtn{margin-left:10px;vertical-align:top;min-height:40px}
+.top{margin-bottom:18px}
+.nt{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:720px){.nt{grid-template-columns:minmax(0,1fr)}}
+.nlist{display:flex;flex-direction:column;gap:10px;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px;max-height:70vh;overflow:auto}
+.nlist ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nlist li button{width:100%;text-align:left;border:0;background:none;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.nlist li button:hover{background:var(--bg)}
+.nlist li button[aria-current="true"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--ac)}
+.nlist li b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nlist li span{color:var(--mut);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ned{display:flex;flex-direction:column;gap:8px;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:14px}
+#ntitle{border:0;background:transparent;font-weight:800;font-size:1.5rem;letter-spacing:-.03em;padding:4px 2px;outline:none;width:100%}
+#nbody{border:0;background:transparent;resize:vertical;min-height:360px;padding:4px 2px;outline:none;line-height:1.6;width:100%}
+.nfoot{display:flex;align-items:center;gap:14px;color:var(--mut);font-size:.85rem;flex-wrap:wrap}
+.nfoot label{display:flex;gap:6px;align-items:center}
+[hidden]{display:none!important}
+#lock{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(18px + env(safe-area-inset-bottom,0px))}
+.card{width:100%;max-width:380px;background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+.card p{margin:0;color:var(--mut);font-size:.95rem}
+.card input{border:1px solid var(--ln);background:var(--bg);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.card .pri{min-height:44px}
+#lmsg{color:#E5484D;min-height:1.2em}
+#lreset{border:0;background:none;color:var(--mut);text-decoration:underline;font-size:.85rem;align-self:flex-start;padding:0}
+</style>
+</head>
+<body>
+<main id="app" hidden>
+<h1>Rank it</h1>
+<div class="seg top" role="group" aria-label="Section">
+  <button data-tab="rank" aria-pressed="true">Rankings</button>
+  <button data-tab="notes" aria-pressed="false">Notes</button>
+</div>
+<button class="ghost" id="dataBtn">Data</button>
+<section class="dp" id="dp" hidden>
+  <h3>Backup</h3>
+  <p>Backup files are encrypted with your password. Restoring needs the password the backup was made with.</p>
+  <div class="rw"><button class="ghost" id="bkDl">Download backup</button></div>
+  <div class="rw"><input type="file" id="bkFile" accept=".json,application/json" aria-label="Backup file"><input type="password" id="bkPw" placeholder="Backup password" aria-label="Backup password" autocomplete="off"></div>
+  <div class="rw"><button class="ghost" id="bkMerge">Merge into my data</button><button class="ghost" id="bkRep">Replace all</button></div>
+  <h3>Google Drive sync</h3>
+  <p>Saves your encrypted data to a private app folder in your Drive. Works on a site you host yourself, not on claude.ai.</p>
+  <input id="gcid" placeholder="Google client ID" aria-label="Google client ID" autocomplete="off">
+  <div class="rw"><button class="pri" id="gSync">Sync now</button><button class="ghost" id="gKeep" hidden>Keep this device’s version</button><button class="ghost" id="gUse" hidden>Use Drive’s version</button></div>
+  <p id="dmsg" role="status"></p>
+</section>
+<div id="rankView">
+<div class="add">
+  <textarea id="txt" rows="1" placeholder="Add an item. Paste several lines to add several." aria-label="New item"></textarea>
+  <select id="sel" aria-label="Add to list"></select>
+  <button class="pri" id="addBtn">Add</button>
+</div>
+<div class="bar">
+  <div class="seg" role="group" aria-label="Layout">
+    <button data-view="lists" aria-pressed="true">Separate lists</button>
+    <button data-view="all" aria-pressed="false">One list</button>
+  </div>
+  <button class="ghost" id="newList">New list</button>
+  <span class="sp"></span>
+  <button class="ghost" id="expBtn">Export text</button>
+  <button class="ghost" id="lockBtn">Lock</button>
+</div>
+<div id="out"></div>
+<textarea id="exp" readonly aria-label="Exported ranking"></textarea>
+</div>
+<div id="notesView" hidden>
+  <div class="nt">
+    <aside class="nlist">
+      <button class="pri" id="newNote">New note</button>
+      <ul id="nl"></ul>
+    </aside>
+    <div>
+      <p class="empty" id="nempty" hidden>No notes yet. Create one to get started.</p>
+      <div class="ned" id="ned">
+        <input id="ntitle" placeholder="Title" aria-label="Note title" spellcheck="true" autocomplete="off">
+        <textarea id="nbody" placeholder="Start writing…" aria-label="Note text" spellcheck="true" autocapitalize="sentences"></textarea>
+        <div class="nfoot">
+          <span id="ncount"></span>
+          <label><input type="checkbox" id="spell" checked> Spellcheck</label>
+          <span class="sp"></span>
+          <button class="ghost" id="delNote">Delete note</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<div id="lock">
+  <div class="card">
+    <h2 id="ltitle">Enter your password</h2>
+    <p id="lsub"></p>
+    <input id="pw" type="password" placeholder="Password" aria-label="Password">
+    <input id="pw2" type="password" placeholder="Repeat password" aria-label="Repeat password" autocomplete="new-password" hidden>
+    <div id="lmsg" role="alert"></div>
+    <button class="pri" id="lgo">Unlock</button>
+    <button id="lreset">Forgot password? Erase and start over</button>
+  </div>
+</div>
+<script>
+const COLORS=['#2F4BFF','#E5484D','#12A594','#F5A524','#9B5DE5','#E5559A'];
+let S={lists:[{id:'l1',name:'My list',c:0}],items:[],view:'lists'};
+const DEF=()=>({lists:[{id:'l1',name:'My list',c:0}],items:[],view:'lists'});
+const enc=new TextEncoder(),dec=new TextDecoder();
+const b64=u=>{let s='';for(const x of u)s+=String.fromCharCode(x);return btoa(s)};
+const unb=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function deriveKey(pw,salt){
+  const km=await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+let KEY=null,SALT=null;
+let lastJ='',PW='';
+async function save(){
+  if(!KEY)return;
+  const j=JSON.stringify({...S,updated:0,synced:0});
+  if(lastJ===''){lastJ=j}else if(j!==lastJ){lastJ=j;S.updated=Date.now()}
+  try{
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,enc.encode(JSON.stringify(S))));
+    localStorage.setItem('rankit-enc',JSON.stringify({s:b64(SALT),i:b64(iv),c:b64(ct)}));
+  }catch(e){}
+}
+const uid=()=>Math.random().toString(36).slice(2,9);
+const $=s=>document.querySelector(s);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const L=id=>S.lists.find(l=>l.id===id)||S.lists[0];
+let dragId=null,fk=null,showExp=false;
+
+function row(it,n,total){
+  const l=L(it.list);
+  const mv=S.view==='lists'&&S.lists.length>1?`<select data-move="${it.id}" aria-label="Move to list">${S.lists.map(x=>`<option value="${x.id}"${x.id===it.list?' selected':''}>${esc(x.name)}</option>`).join('')}</select>`:'';
+  const chip=S.view==='all'?`<span class="chip"><i style="background:${COLORS[l.c%6]}"></i>${esc(l.name)}</span>`:'';
+  return `<li draggable="true" data-id="${it.id}"><b class="rk">${n}</b><span class="tx" data-edit="${it.id}" title="Double-click to edit">${esc(it.text)}</span>${chip}${mv}<span class="ct"><button data-up="${it.id}" aria-label="Move up"${n===1?' disabled':''}>↑</button><button data-dn="${it.id}" aria-label="Move down"${n===total?' disabled':''}>↓</button><button data-rm="${it.id}" aria-label="Remove">×</button></span></li>`;
+}
+
+function render(){
+  applyTab();
+  const sel=$('#sel'),cur=sel.value;
+  sel.innerHTML=S.lists.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');
+  if(S.lists.some(l=>l.id===cur))sel.value=cur;
+  sel.style.display=S.lists.length>1?'':'none';
+  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===S.view));
+  const out=$('#out');out.className=S.view==='all'?'one':'';
+  if(S.view==='all'){
+    out.innerHTML=`<ol class="rows" data-drop="*">${S.items.map((it,i)=>row(it,i+1,S.items.length)).join('')}</ol>`+(S.items.length?'':'<p class="empty">Nothing to rank yet. Add your first item above.</p>');
+  }else{
+    out.innerHTML=S.lists.map(l=>{
+      const its=S.items.filter(i=>i.list===l.id);
+      return `<section class="lst" data-drop="${l.id}"><header><i class="dot" style="background:${COLORS[l.c%6]}"></i><input class="ln" value="${esc(l.name)}" data-rename="${l.id}" aria-label="List name"><span class="cnt">${its.length}</span>${S.lists.length>1?`<button data-dl="${l.id}">Delete</button>`:''}</header><ol class="rows">${its.map((it,i)=>row(it,i+1,its.length)).join('')}</ol>${its.length?'':'<p class="empty">Empty. Add an item or drag one here.</p>'}</section>`;
+    }).join('');
+  }
+  if(showExp)$('#exp').value=exportText();
+  $('#exp').className=showExp?'on':'';
+  save();
+  if(fk){let e=$(fk);if(!e||e.disabled){e=$(fk.replace('up','dn'))||$(fk.replace('dn','up'))}if(e&&!e.disabled)e.focus();fk=null}
+}
+
+function exportText(){
+  if(S.view==='all')return S.items.map((it,i)=>`${i+1}. ${it.text} (${L(it.list).name})`).join('\n');
+  return S.lists.map(l=>l.name+'\n'+S.items.filter(i=>i.list===l.id).map((it,i)=>`${i+1}. ${it.text}`).join('\n')).join('\n\n');
+}
+
+function moveBy(id,d,listId){
+  const pool=S.view==='all'?S.items:S.items.filter(i=>i.list===listId);
+  const k=pool.findIndex(i=>i.id===id),t=pool[k+d];
+  if(!t)return;
+  const it=S.items.splice(S.items.findIndex(i=>i.id===id),1)[0];
+  const ti=S.items.indexOf(t);
+  S.items.splice(d<0?ti:ti+1,0,it);
+}
+
+function addItems(){
+  const lines=$('#txt').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length)return;
+  const list=$('#sel').value||S.lists[0].id;
+  lines.forEach(t=>S.items.push({id:uid(),text:t,list}));
+  $('#txt').value='';
+  render();$('#txt').focus();
+}
+$('#addBtn').onclick=addItems;
+$('#txt').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addItems()}};
+$('#newList').onclick=()=>{
+  const n=S.lists.length+1;
+  S.lists.push({id:uid(),name:'List '+n,c:S.lists.length});
+  S.view='lists';render();
+};
+$('#expBtn').onclick=()=>{showExp=!showExp;render()};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{S.view=b.dataset.view;render()});
+
+const out=$('#out');
+out.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const d=b.dataset,li=b.closest('li');
+  if(d.up||d.dn){
+    const id=d.up||d.dn,it=S.items.find(i=>i.id===id);
+    moveBy(id,d.up?-1:1,it.list);fk=`[data-${d.up?'up':'dn'}="${id}"]`;render();
+  }else if(d.rm){S.items=S.items.filter(i=>i.id!==d.rm);render()}
+  else if(d.dl){
+    const rest=S.lists.filter(l=>l.id!==d.dl);
+    S.items.forEach(i=>{if(i.list===d.dl)i.list=rest[0].id});
+    S.lists=rest;render();
+  }
+});
+out.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.move){
+    const it=S.items.find(i=>i.id===t.dataset.move);
+    S.items.splice(S.items.indexOf(it),1);it.list=t.value;S.items.push(it);render();
+  }else if(t.dataset.rename){
+    L(t.dataset.rename).name=t.value.trim()||'Untitled';render();
+  }
+});
+out.addEventListener('dblclick',e=>{
+  const t=e.target.closest('[data-edit]');if(!t)return;
+  const li=t.closest('li');li.draggable=false;
+  t.contentEditable='true';t.focus();
+  const done=()=>{const it=S.items.find(i=>i.id===t.dataset.edit),v=t.textContent.trim();if(v&&it)it.text=v;render()};
+  t.onblur=done;
+  t.onkeydown=k=>{if(k.key==='Enter'){k.preventDefault();t.blur()}};
+});
+
+function clearMarks(){document.querySelectorAll('.before,.after,.over').forEach(n=>n.classList.remove('before','after','over'))}
+out.addEventListener('dragstart',e=>{
+  const li=e.target.closest('li');if(!li)return;
+  dragId=li.dataset.id;li.classList.add('dragging');
+  try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId)}catch(x){}
+});
+out.addEventListener('dragend',()=>{dragId=null;clearMarks();document.querySelectorAll('.dragging').forEach(n=>n.classList.remove('dragging'))});
+out.addEventListener('dragover',e=>{
+  if(!dragId)return;
+  e.preventDefault();clearMarks();
+  const li=e.target.closest('li');
+  if(li&&li.dataset.id!==dragId){
+    const r=li.getBoundingClientRect();
+    li.classList.add(e.clientY>r.top+r.height/2?'after':'before');
+  }else{const s=e.target.closest('.lst');if(s)s.classList.add('over')}
+});
+out.addEventListener('drop',e=>{
+  if(!dragId)return;
+  e.preventDefault();
+  const it=S.items.find(i=>i.id===dragId);if(!it)return;
+  const li=e.target.closest('li');
+  if(li&&li.dataset.id!==dragId){
+    const t=S.items.find(i=>i.id===li.dataset.id),r=li.getBoundingClientRect();
+    const after=e.clientY>r.top+r.height/2;
+    S.items.splice(S.items.indexOf(it),1);
+    if(S.view==='lists')it.list=t.list;
+    const ti=S.items.indexOf(t);
+    S.items.splice(after?ti+1:ti,0,it);
+  }else if(!li){
+    const s=e.target.closest('.lst');
+    if(s){S.items.splice(S.items.indexOf(it),1);it.list=s.dataset.drop;S.items.push(it)}
+  }
+  dragId=null;render();
+});
+
+const lock=$('#lock'),pw=$('#pw'),pw2=$('#pw2'),msg=$('#lmsg'),go=$('#lgo'),rst=$('#lreset');
+const RST_TXT='Forgot password? Erase and start over';
+let mode='unlock',armed=false;
+function showLock(){
+  let has=false;
+  try{has=!!localStorage.getItem('rankit-enc')}catch(e){}
+  mode=has?'unlock':'setup';
+  $('#app').hidden=true;lock.hidden=false;
+  $('#ltitle').textContent=mode==='setup'?'Set a password':'Enter your password';
+  $('#lsub').textContent=mode==='setup'?'Your lists are encrypted in this browser with this password. If you forget it, the data can’t be recovered.':'Your lists are locked.';
+  pw2.hidden=mode!=='setup';
+  pw.autocomplete=mode==='setup'?'new-password':'current-password';
+  go.textContent=mode==='setup'?'Set password':'Unlock';
+  rst.hidden=mode==='setup';rst.textContent=RST_TXT;armed=false;
+  pw.value=pw2.value='';msg.textContent='';
+  pw.focus();
+}
+async function submit(){
+  msg.textContent='';
+  if(!window.crypto||!crypto.subtle){msg.textContent='Encryption isn’t available in this browser.';return}
+  const p=pw.value;
+  if(mode==='setup'){
+    if(p.length<6){msg.textContent='Use at least 6 characters.';return}
+    if(p!==pw2.value){msg.textContent='The two passwords don’t match.';return}
+    SALT=crypto.getRandomValues(new Uint8Array(16));
+    KEY=await deriveKey(p,SALT);
+    S=DEF();
+    try{const r=localStorage.getItem('rankit');if(r){const o=JSON.parse(r);if(o&&o.lists&&o.lists.length)S=o;localStorage.removeItem('rankit')}}catch(e){}
+    await save();
+  }else{
+    try{
+      const st=JSON.parse(localStorage.getItem('rankit-enc'));
+      const salt=unb(st.s),k=await deriveKey(p,salt);
+      const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb(st.i)},k,unb(st.c));
+      S=JSON.parse(dec.decode(pt));SALT=salt;KEY=k;
+    }catch(e){msg.textContent='Wrong password. Try again.';return}
+  }
+  PW=p;lastJ='';pw.value=pw2.value='';lock.hidden=true;$('#app').hidden=false;render();
+}
+go.onclick=submit;
+[pw,pw2].forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')submit()});
+rst.onclick=()=>{
+  if(!armed){armed=true;rst.textContent='Click again to erase all saved lists';return}
+  try{localStorage.removeItem('rankit-enc');localStorage.removeItem('rankit')}catch(e){}
+  S=DEF();KEY=null;showLock();
+};
+$('#lockBtn').onclick=async()=>{
+  await save();KEY=null;PW='';lastJ='';S=DEF();showExp=false;$('#dp').hidden=true;$('#bkPw').value='';$('#dmsg').textContent='';
+  $('#exp').value='';$('#out').innerHTML='';
+  $('#ntitle').value=$('#nbody').value='';$('#nl').innerHTML='';curNote=null;
+  showLock();
+};
+let curNote=null,nTimer=null,delArm=false;
+function applyTab(){
+  if(!S.notes)S.notes=[];
+  const t=S.tab==='notes'?'notes':'rank';
+  $('#rankView').hidden=t!=='rank';$('#notesView').hidden=t!=='notes';
+  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t));
+  if(t==='notes')renderNotes();
+}
+function countWords(){
+  const w=($('#nbody').value.trim().match(/\S+/g)||[]).length;
+  $('#ncount').textContent=w+(w===1?' word':' words');
+}
+function renderNotes(load=true){
+  const ns=S.notes.slice().sort((a,b)=>b.t-a.t);
+  if(!ns.some(n=>n.id===curNote))curNote=ns[0]?ns[0].id:null;
+  $('#nl').innerHTML=ns.map(n=>`<li><button data-note="${n.id}" aria-current="${n.id===curNote}"><b>${esc(n.title||'Untitled')}</b><span>${esc((n.body||'').replace(/\s+/g,' ').slice(0,60)||'No text')}</span></button></li>`).join('');
+  const n=S.notes.find(x=>x.id===curNote);
+  $('#ned').hidden=!n;$('#nempty').hidden=!!n;
+  if(n&&load){$('#ntitle').value=n.title;$('#nbody').value=n.body;countWords()}
+  delArm=false;$('#delNote').textContent='Delete note';
+}
+function editNote(){
+  const n=S.notes.find(x=>x.id===curNote);if(!n)return;
+  n.title=$('#ntitle').value;n.body=$('#nbody').value;n.t=Date.now();
+  countWords();renderNotes(false);
+  clearTimeout(nTimer);nTimer=setTimeout(()=>{nTimer=null;save()},400);
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;render()});
+$('#newNote').onclick=()=>{
+  const n={id:uid(),title:'',body:'',t:Date.now()};
+  S.notes.push(n);curNote=n.id;renderNotes();save();$('#ntitle').focus();
+};
+$('#nl').onclick=e=>{const b=e.target.closest('[data-note]');if(!b)return;curNote=b.dataset.note;renderNotes()};
+$('#ntitle').oninput=editNote;
+$('#nbody').oninput=editNote;
+$('#spell').onchange=e=>{$('#nbody').spellcheck=e.target.checked;$('#ntitle').spellcheck=e.target.checked};
+$('#delNote').onclick=()=>{
+  if(!delArm){delArm=true;$('#delNote').textContent='Click again to delete';return}
+  S.notes=S.notes.filter(n=>n.id!==curNote);curNote=null;renderNotes();save();
+};
+addEventListener('pagehide',()=>{if(nTimer){clearTimeout(nTimer);save()}});
+const GCID='';
+const GF='rankit.enc.json';
+const dm=t=>{$('#dmsg').textContent=t};
+let rArm=false,gTok=null,gExp=0;
+async function decBlob(st,pwd){
+  const k=await deriveKey(pwd,unb(st.s));
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb(st.i)},k,unb(st.c));
+  return JSON.parse(dec.decode(pt));
+}
+async function encBlob(){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,enc.encode(JSON.stringify(S))));
+  return {s:b64(SALT),i:b64(iv),c:b64(ct)};
+}
+function mergeIn(R){
+  const lid=new Set(S.lists.map(l=>l.id));
+  R.lists.forEach(l=>{if(!lid.has(l.id))S.lists.push(l)});
+  const iid=new Set(S.items.map(i=>i.id));
+  R.items.forEach(i=>{if(!iid.has(i.id)){if(!S.lists.some(l=>l.id===i.list))i.list=S.lists[0].id;S.items.push(i)}});
+  if(!S.notes)S.notes=[];
+  (R.notes||[]).forEach(n=>{const m=S.notes.find(x=>x.id===n.id);if(!m)S.notes.push(n);else if(n.t>m.t)Object.assign(m,n)});
+}
+async function saveFile(name,text){
+  try{
+    if(window.claude&&claude.use){const d=await claude.use('downloads');if(d){await d.save({filename:name,data:text});return}}
+  }catch(e){if(e&&e.code==='declined')return}
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  a.download=name;document.body.appendChild(a);a.click();a.remove();
+}
+$('#dataBtn').onclick=()=>{
+  const p=$('#dp');p.hidden=!p.hidden;
+  if(!p.hidden){let v='';try{v=localStorage.getItem('rankit-gcid')||''}catch(e){}$('#gcid').value=v||GCID}
+};
+$('#bkDl').onclick=async()=>{
+  await save();
+  let s=null;try{s=localStorage.getItem('rankit-enc')}catch(e){}
+  if(!s){dm('Nothing saved yet.');return}
+  await saveFile('rank-it-backup.json',s);
+  dm('Backup ready. It is encrypted with your password.');
+};
+async function readBk(){
+  const f=$('#bkFile').files[0];
+  if(!f){dm('Choose a backup file first.');return null}
+  try{return await decBlob(JSON.parse(await f.text()),$('#bkPw').value)}
+  catch(e){dm('Couldn’t open that file. Check the password.');return null}
+}
+$('#bkMerge').onclick=async()=>{
+  const R=await readBk();if(!R)return;
+  mergeIn(R);render();dm('Merged the backup into your data.');
+};
+$('#bkRep').onclick=async()=>{
+  if(!rArm){rArm=true;$('#bkRep').textContent='Click again to replace everything';return}
+  rArm=false;$('#bkRep').textContent='Replace all';
+  const R=await readBk();if(!R)return;
+  S=R;S.updated=Date.now();S.synced=0;lastJ='';render();dm('Replaced your data with the backup.');
+};
+
+function gScript(){return new Promise((res,rej)=>{
+  if(window.google&&google.accounts)return res();
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
+  s.onload=res;s.onerror=()=>rej(new Error('script'));document.head.appendChild(s);
+})}
+async function gToken(cid){
+  if(gTok&&Date.now()<gExp)return gTok;
+  await gScript();
+  return new Promise((res,rej)=>{
+    const c=google.accounts.oauth2.initTokenClient({client_id:cid,scope:'https://www.googleapis.com/auth/drive.appdata',
+      callback:r=>{if(r.error)rej(new Error(r.error));else{gTok=r.access_token;gExp=Date.now()+(r.expires_in-60)*1000;res(gTok)}},
+      error_callback:e=>rej(new Error(e.type||'popup'))});
+    c.requestAccessToken({prompt:''});
+  });
+}
+async function dv(tok,url,opt={}){
+  const r=await fetch(url,{...opt,headers:{Authorization:'Bearer '+tok,...(opt.headers||{})}});
+  if(!r.ok)throw new Error('Drive error '+r.status);
+  return r;
+}
+async function findFile(tok){
+  const r=await dv(tok,'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&q='+encodeURIComponent("name='"+GF+"'"));
+  const j=await r.json();return j.files[0]?j.files[0].id:null;
+}
+async function upload(tok,id){
+  if(!S.updated)S.updated=Date.now();
+  const body=JSON.stringify(await encBlob());
+  if(id){await dv(tok,'https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body})}
+  else{
+    const b='rk'+uid();
+    const mp=`--${b}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify({name:GF,parents:['appDataFolder']})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`;
+    await dv(tok,'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:mp});
+  }
+  S.synced=S.updated;await save();
+}
+const showConf=b=>{$('#gKeep').hidden=$('#gUse').hidden=!b};
+async function syncNow(force){
+  const cid=($('#gcid').value||'').trim()||GCID;
+  if(!cid){dm('Enter your Google client ID first.');return}
+  showConf(false);dm('Connecting to Google…');
+  try{
+    const tok=await gToken(cid);
+    try{localStorage.setItem('rankit-gcid',cid)}catch(e){}
+    const id=await findFile(tok);
+    let R=null;
+    if(id){
+      const st=await (await dv(tok,'https://www.googleapis.com/drive/v3/files/'+id+'?alt=media')).json();
+      try{R=await decBlob(st,PW)}catch(e){dm('The copy in Drive uses a different password.');return}
+    }
+    if(!R){await upload(tok,id);dm('Uploaded to Drive.');return}
+    const dirty=(S.updated||0)!==(S.synced||0);
+    const changed=(R.updated||0)!==(S.synced||0);
+    if(changed&&dirty&&!force){showConf(true);dm('Both this device and Drive have changes. Choose which version to keep.');return}
+    if(changed&&(force==='use'||!dirty)){
+      S=R;S.synced=S.updated=R.updated||Date.now();lastJ='';render();dm('Loaded the version from Drive.');return;
+    }
+    if(dirty||force==='keep'){await upload(tok,id);dm('Uploaded your changes to Drive.')}
+    else dm('Already up to date.');
+  }catch(e){
+    dm(e.message==='script'?'Google sign-in can’t load on this site. Use a copy you host yourself.':'Sync failed: '+e.message);
+  }
+}
+$('#gSync').onclick=()=>syncNow();
+$('#gKeep').onclick=()=>syncNow('keep');
+$('#gUse').onclick=()=>syncNow('use');
+showLock();
+</script>
+</body>
+</html>
